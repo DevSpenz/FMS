@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PDF Export Styling */
+#recent-transactions {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+#recent-transactions table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+#recent-transactions th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+  padding: 12px 8px;
+  border-bottom: 2px solid #e5e7eb;
+  text-align: left;
+}
+
+#recent-transactions td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+#recent-transactions tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Ensure proper printing/PDF styles */
+@media print {
+  #recent-transactions {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+
+  #recent-transactions th {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
