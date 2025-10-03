@@ -1,97 +1,61 @@
 'use client';
-import { useState } from 'react';
 import { DollarSign, TrendingUp, Clock, AlertTriangle, FileText, Download } from 'lucide-react';
-import { Transaction, Department } from '../types';
 import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
-import PdfTransactionTable from './PdfTransactionTable';
+import { useFinancialSummary, useDepartmentSpending, useVouchers } from '../hooks/useSupabaseData';
 
-interface DashboardProps {
-    transactions: Transaction[];
-    departments: Department[];
-}
+export default function Dashboard() {
+    const { summary, loading: summaryLoading } = useFinancialSummary();
+    const { spending, loading: spendingLoading } = useDepartmentSpending();
+    const { vouchers, loading: vouchersLoading } = useVouchers();
 
-export default function Dashboard({ transactions, departments }: DashboardProps) {
-    const totalFunds = 12450000;
-    const utilizedFunds = 8760000;
-    const pendingDisbursements = 1240000;
+    const recentTransactions = vouchers.slice(0, 5).map(v => ({
+        date: new Date(v.date).toLocaleDateString(),
+        description: v.description,
+        department: v.department || 'N/A',
+        amount: `KSh ${Number(v.amount).toLocaleString()}`,
+        status: v.status.charAt(0).toUpperCase() + v.status.slice(1)
+    }));
+
+    const totalFunds = summary ? Number(summary.total_assets) : 0;
+    const utilizedFunds = summary ? Number(summary.total_expenses) : 0;
+    const pendingDisbursements = summary ? Number(summary.pending_vouchers) * 100000 : 0;
 
     const metrics = [
         {
-            title: 'Total Funds',
+            title: 'Total Assets',
             value: `KSh ${totalFunds.toLocaleString()}`,
-            change: '+2.5% from last month',
+            change: summary ? `Cash: KSh ${(Number(summary.cash_received) - Number(summary.cash_disbursed)).toLocaleString()}` : 'Loading...',
             icon: DollarSign,
             color: 'blue'
         },
         {
-            title: 'Utilized Funds',
+            title: 'Total Expenses',
             value: `KSh ${utilizedFunds.toLocaleString()}`,
-            change: '70.3% utilization rate',
+            change: summary ? `${((utilizedFunds / (summary.total_revenue || 1)) * 100).toFixed(1)}% of revenue` : 'Loading...',
             icon: TrendingUp,
             color: 'green'
         },
         {
-            title: 'Pending Disbursements',
-            value: `KSh ${pendingDisbursements.toLocaleString()}`,
-            change: '12 pending requests',
+            title: 'Pending Vouchers',
+            value: summary?.pending_vouchers?.toString() || '0',
+            change: 'Awaiting approval',
             icon: Clock,
             color: 'yellow'
         },
         {
-            title: 'Overdue Reports',
-            value: '3',
-            change: 'Require immediate attention',
-            icon: AlertTriangle,
-            color: 'red'
+            title: 'Net Income',
+            value: summary ? `KSh ${Number(summary.net_income).toLocaleString()}` : 'KSh 0',
+            change: 'Revenue minus expenses',
+            icon: summary && Number(summary.net_income) < 0 ? AlertTriangle : TrendingUp,
+            color: summary && Number(summary.net_income) < 0 ? 'red' : 'green'
         }
     ];
 
-    const recentTransactions = [
-        {
-            date: '15/03/2023',
-            description: 'Medical Supplies - Health Dept',
-            department: 'Health',
-            amount: 'KSh 450,000',
-            status: 'Completed'
-        },
-        {
-            date: '14/03/2023',
-            description: 'School Materials - Education Dept',
-            department: 'Education',
-            amount: 'KSh 320,000',
-            status: 'Completed'
-        },
-        {
-            date: '13/03/2023',
-            description: 'Community Outreach - Social Services',
-            department: 'Social Services',
-            amount: 'KSh 280,000',
-            status: 'Pending'
-        },
-        {
-            date: '12/03/2023',
-            description: 'Agricultural Tools - Livelihoods',
-            department: 'Livelihoods',
-            amount: 'KSh 190,000',
-            status: 'Completed'
-        },
-        {
-            date: '10/03/2023',
-            description: 'Office Supplies - Administration',
-            department: 'Administration',
-            amount: 'KSh 75,000',
-            status: 'Completed'
-        }
-    ];
-
-    // Chart data
-    const departmentSpending = [
-        { department: 'Health', spent: 950000, budget: 1200000 },
-        { department: 'Education', spent: 720000, budget: 900000 },
-        { department: 'Social Services', spent: 650000, budget: 800000 },
-        { department: 'Livelihoods', spent: 520000, budget: 700000 },
-        { department: 'Administration', spent: 320000, budget: 400000 }
-    ];
+    const departmentSpending = spending.map(dept => ({
+        department: dept.department_name,
+        spent: Number(dept.spent),
+        budget: Number(dept.budget)
+    }));
 
     const fundSources = [
         { source: 'Government Grants', amount: 5600000, percentage: 45 },
@@ -101,20 +65,18 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
         { source: 'Other', amount: 250000, percentage: 2 }
     ];
 
-    // Handle PDF Export for transactions only
     const handleExportPDF = () => {
         const pdfData = recentTransactions.map(tx => ({
-            date: new Date(tx.date).toLocaleDateString(),
+            date: tx.date,
             description: tx.description,
             department: tx.department,
-            amount: `KSh ${tx.amount.toLocaleString()}`,
-            status: tx.status.charAt(0).toUpperCase() + tx.status.slice(1)
+            amount: tx.amount,
+            status: tx.status
         }));
 
         exportToPDF(pdfData, 'ngo_recent_transactions', 'Recent Transactions Report');
     };
 
-    // Handle Excel Export for transactions only
     const handleExportExcel = () => {
         const excelData = recentTransactions.map(tx => ({
             'Date': tx.date,
@@ -127,7 +89,6 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
         exportToExcel(excelData, 'ngo_recent_transactions', 'Recent Transactions');
     };
 
-    // Handle CSV Export for transactions only
     const handleExportCSV = () => {
         const csvData = recentTransactions.map(tx => ({
             'Date': tx.date,
@@ -140,14 +101,23 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
         exportToCSV(csvData, 'ngo_recent_transactions', 'Recent Transactions');
     };
 
+    if (summaryLoading || spendingLoading || vouchersLoading) {
+        return (
+            <div className="p-6 flex items-center justify-center h-full">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
             </div>
 
-            {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {metrics.map((metric, index) => (
                     <div
@@ -180,21 +150,19 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                 ))}
             </div>
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Department Spending Chart */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
                     <h5 className="text-lg font-semibold text-gray-900 mb-4">Department Spending vs Budget</h5>
                     <div className="space-y-4">
                         {departmentSpending.map((dept, index) => {
-                            const utilization = (dept.spent / dept.budget) * 100;
+                            const utilization = dept.budget > 0 ? (dept.spent / dept.budget) * 100 : 0;
                             return (
                                 <div key={index} className="space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="font-medium text-gray-700">{dept.department}</span>
                                         <span className="text-gray-600">
-                      KSh {dept.spent.toLocaleString()} / KSh {dept.budget.toLocaleString()}
-                    </span>
+                                            KSh {dept.spent.toLocaleString()} / KSh {dept.budget.toLocaleString()}
+                                        </span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div
@@ -215,7 +183,6 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                     </div>
                 </div>
 
-                {/* Funding Sources Chart */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
                     <h5 className="text-lg font-semibold text-gray-900 mb-4">Funding Sources</h5>
                     <div className="space-y-3">
@@ -233,8 +200,8 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                                         }}
                                     ></div>
                                     <span className="text-sm font-medium text-gray-700 flex-1">
-                    {source.source}
-                  </span>
+                                        {source.source}
+                                    </span>
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm font-semibold text-gray-900">
@@ -246,19 +213,17 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                         ))}
                     </div>
 
-                    {/* Summary */}
                     <div className="mt-6 pt-4 border-t border-gray-200">
                         <div className="flex justify-between items-center">
                             <span className="text-sm font-medium text-gray-700">Total Funding</span>
                             <span className="text-lg font-bold text-gray-900">
-                KSh {fundSources.reduce((sum, source) => sum + source.amount, 0).toLocaleString()}
-              </span>
+                                KSh {fundSources.reduce((sum, source) => sum + source.amount, 0).toLocaleString()}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Recent Transactions Card with Export Buttons */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h5 className="text-lg font-semibold text-gray-900">Recent Transactions</h5>
@@ -279,7 +244,7 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                         </button>
                         <button
                             onClick={handleExportCSV}
-                            className="px-3 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 transition-colors flex items-center text-sm"
+                            className="px-3 py-2 border border-gray-500 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center text-sm"
                         >
                             <Download className="h-4 w-4 mr-1" />
                             CSV
@@ -287,7 +252,6 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                     </div>
                 </div>
 
-                {/* Regular table for screen display */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -305,26 +269,27 @@ export default function Dashboard({ transactions, departments }: DashboardProps)
                                 <td className="py-3">{transaction.date}</td>
                                 <td className="py-3">{transaction.description}</td>
                                 <td className="py-3">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                      {transaction.department}
-                    </span>
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                        {transaction.department}
+                                    </span>
                                 </td>
                                 <td className="py-3 font-mono">{transaction.amount}</td>
                                 <td className="py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        transaction.status === 'Completed'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {transaction.status}
-                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        transaction.status === 'Completed' || transaction.status === 'Approved'
+                                            ? 'bg-green-100 text-green-800'
+                                            : transaction.status === 'Pending'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {transaction.status}
+                                    </span>
                                 </td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     );

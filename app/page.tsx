@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
-import Cashbook from './components/Cashbook';
-import Ledger from './components/Ledger';
-import Vouchers from './components/Vouchers';
-import TrialBalance from './components/TrialBalance';
-import BalanceSheet from './components/BalanceSheet';
+import CashbookIntegrated from './components/CashbookIntegrated';
+import LedgerIntegrated from './components/LedgerIntegrated';
+import VouchersIntegrated from './components/VouchersIntegrated';
+import TrialBalanceIntegrated from './components/TrialBalanceIntegrated';
+import BalanceSheetIntegrated from './components/BalanceSheetIntegrated';
 import Reports from './components/Reports';
 import Departments from './components/Departments';
 import Users from './components/Users';
@@ -26,17 +26,17 @@ export default function Home() {
     const renderActiveTab = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <Dashboard transactions={transactions} departments={departments} />;
+                return <Dashboard />;
             case 'cashbook':
-                return <Cashbook />;
+                return <CashbookIntegrated />;
             case 'ledger':
-                return <Ledger />;
+                return <LedgerIntegrated />;
             case 'vouchers':
-                return <Vouchers />;
+                return <VouchersIntegrated />;
             case 'trial-balance':
-                return <TrialBalance />;
+                return <TrialBalanceIntegrated />;
             case 'balance-sheet':
-                return <BalanceSheet />;
+                return <BalanceSheetIntegrated />;
             case 'reports':
                 return <Reports />;
             case 'departments':
@@ -46,7 +46,7 @@ export default function Home() {
             case 'settings':
                 return <Settings />;
             default:
-                return <Dashboard transactions={transactions} departments={departments} />;
+                return <Dashboard />;
         }
     };
 
