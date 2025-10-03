@@ -4,8 +4,6 @@ import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
 import { useFinancialSummary, useDepartmentSpending, useVouchers } from '../hooks/useSupabaseData';
 
 export default function Dashboard() {
-
-   const { data: departments, isLoading } = useDepartments();
   
     const { summary, loading: summaryLoading } = useFinancialSummary();
     const { spending, loading: spendingLoading } = useDepartmentSpending();
