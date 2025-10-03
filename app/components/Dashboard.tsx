@@ -2,8 +2,12 @@
 import { DollarSign, TrendingUp, Clock, AlertTriangle, FileText, Download } from 'lucide-react';
 import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
 import { useFinancialSummary, useDepartmentSpending, useVouchers } from '../hooks/useSupabaseData';
+import { useDepartments } from '../hooks/useDepartments';
 
 export default function Dashboard() {
+
+   const { data: departments, isLoading } = useDepartments();
+  
     const { summary, loading: summaryLoading } = useFinancialSummary();
     const { spending, loading: spendingLoading } = useDepartmentSpending();
     const { vouchers, loading: vouchersLoading } = useVouchers();
@@ -291,6 +295,16 @@ export default function Dashboard() {
                     </table>
                 </div>
             </div>
+ {/* TEMPORARY TEST - remove after */}
+      <div className="p-4 bg-blue-50 rounded-lg mt-4">
+        <h4 className="font-bold">Data Connection Test</h4>
+        {isLoading ? (
+          <p>Loading departments...</p>
+        ) : (
+          <p>✅ Loaded {departments?.length} departments from database!</p>
+        )}
+      </div>
+          
         </div>
     );
 }
