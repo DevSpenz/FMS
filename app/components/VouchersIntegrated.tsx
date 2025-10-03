@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Plus, Eye, Printer, FileText, Download, Filter, X } from 'lucide-react';
+import { Plus, Eye, Printer, FileText, Download, ListFilter as Filter, X } from 'lucide-react';
 import { exportToPDF, exportToExcel } from '../utils/exportUtils';
 import { useVouchers, useDepartments, useChartOfAccounts, createVoucher } from '../hooks/useSupabaseData';
 

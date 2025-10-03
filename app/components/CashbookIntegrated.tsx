@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { FileText, Download, Filter } from 'lucide-react';
+import { FileText, Download, ListFilter as Filter } from 'lucide-react';
 import { exportToPDF, exportToExcel } from '../utils/exportUtils';
 import { useCashbook } from '../hooks/useSupabaseData';
 
