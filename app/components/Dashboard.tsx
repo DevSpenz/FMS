@@ -1,4 +1,4 @@
-'use client';
+'use client;
 import { DollarSign, TrendingUp, Clock, TriangleAlert as AlertTriangle, FileText, Download } from 'lucide-react';
 import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
 import { useFinancialSummary, useDepartmentSpending, useVouchers } from '../hooks/useSupabaseData';
