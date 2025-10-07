@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { FileText, Download, ListFilter as Filter } from 'lucide-react';
-import { exportToPDF, exportToExcel } from '../utils/exportUtils';
+import { FileText, Download, Filter } from 'lucide-react';
+import { exportToExcel } from '../utils/exportUtils';
+import { exportCashbookToPDF } from '../utils/pdfExporters';
 import { useCashbook } from '../hooks/useSupabaseData';
 
 export default function CashbookIntegrated() {
@@ -26,14 +27,14 @@ export default function CashbookIntegrated() {
 
     const handleExportPDF = () => {
         const data = transactionsWithBalance.map(tx => ({
-            date: tx.date,
+            date: new Date(tx.date).toLocaleDateString(),
             voucher_number: tx.voucher_number,
             description: tx.description,
             cash_in: Number(tx.cash_in).toFixed(2),
             cash_out: Number(tx.cash_out).toFixed(2),
             balance: tx.balance.toFixed(2)
         }));
-        exportToPDF(data as any, 'cashbook', 'Cashbook Report');
+        exportCashbookToPDF(data, 'cashbook');
     };
 
     const handleExportExcel = () => {

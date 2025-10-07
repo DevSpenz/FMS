@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { FileText, Download } from 'lucide-react';
-import { exportToPDF, exportToExcel } from '../utils/exportUtils';
+import { exportToExcel } from '../utils/exportUtils';
+import { exportLedgerToPDF } from '../utils/pdfExporters';
 import { useLedger, useChartOfAccounts } from '../hooks/useSupabaseData';
 
 export default function LedgerIntegrated() {
@@ -11,13 +12,13 @@ export default function LedgerIntegrated() {
 
     const handleExportPDF = () => {
         const data = entries.map(entry => ({
-            date: entry.transaction_date,
+            date: new Date(entry.transaction_date).toLocaleDateString(),
             voucher: entry.voucher_number,
             description: entry.description,
             debit: Number(entry.debit).toFixed(2),
             credit: Number(entry.credit).toFixed(2)
         }));
-        exportToPDF(data as any, 'general_ledger', 'General Ledger Report');
+        exportLedgerToPDF(data, 'general_ledger');
     };
 
     const handleExportExcel = () => {
